@@ -48,6 +48,28 @@ class AliyunOSS():
         import traceback
         traceback.print_exc()
 
+    def create_bucket(self, callback, bucket, acl = '', headers = {}):
+        adapter = _ResultAdapter("PutBucket",
+                                 self._api.create_bucket,
+                                 GetObject)
+        callable = Callable(adapter,
+                            (bucket, acl, headers),
+                            resultHandler = callback,
+                            exceptHandler = self._exceptHandler)
+        logging.info('Calling PutBucket')
+        self._async.add(callable)
+
+    def delete_bucket(self, callback, bucket):
+        adapter = _ResultAdapter("DeleteBucket",
+                                 self._api.delete_bucket,
+                                 GetObject)
+        callable = Callable(adapter,
+                            (bucket,),
+                            resultHandler = callback,
+                            exceptHandler = self._exceptHandler)
+        logging.info('Calling DeleteBucket')
+        self._async.add(callable)
+
     def get_service(self, callback):
         adapter = _ResultAdapter("GetService",
                                  self._api.get_service,

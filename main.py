@@ -27,7 +27,5 @@ def main():
     event_handler = GUIEventHandler(aliyun)
     ui.main(event_handler)
 
-
-
 if __name__ == '__main__':
     main()

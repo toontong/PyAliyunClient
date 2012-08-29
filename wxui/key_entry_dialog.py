@@ -4,7 +4,7 @@ import os
 import wx
 
 class KeyEntryDialog(wx.Dialog):
-    _FILE = '.ackey'
+    _FILE = '.ackey.pyc'
     def __init__(
             self, parent, ID, title, size = wx.DefaultSize, pos = wx.DefaultPosition,
             style = wx.DEFAULT_DIALOG_STYLE,
@@ -79,12 +79,12 @@ class KeyEntryDialog(wx.Dialog):
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
 
-        btn = wx.Button(self, wx.ID_OK)
+        btn = wx.Button(self, wx.ID_OK, u' 确 定 ')
         btn.SetHelpText("The OK button completes the dialog")
         btn.SetDefault()
         btnsizer.AddButton(btn)
 
-        btn = wx.Button(self, wx.ID_CANCEL)
+        btn = wx.Button(self, wx.ID_CANCEL, u' 取 消 ')
         btn.SetHelpText("The Cancel button cancels the dialog. (Cool, huh?)")
         btnsizer.AddButton(btn)
         btnsizer.Realize()

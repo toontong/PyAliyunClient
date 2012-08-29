@@ -5,6 +5,7 @@ import wx
 import wx.lib.mixins.listctrl  as  listmix
 
 class TreeView(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
+    ID_DELETE_BUCKET = wx.NewId()
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = wx.LC_REPORT
                                  #| wx.BORDER_SUNKEN
@@ -30,6 +31,13 @@ class TreeView(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         info.m_text = 'Bucket Name'
         self.InsertColumnInfo(0, info)
 
+        self.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.on_right_clicked)
+
+    def on_right_clicked(self, evt):
+        menu = wx.Menu()
+        menu.Append(self.ID_DELETE_BUCKET, u'删除')
+        self.PopupMenu(menu)
+        menu.Destroy()
 
     def add_bucket(self, bucket):
         # TODO: 非主线程更新UI，在xp下程序会崩溃
@@ -40,5 +48,3 @@ class TreeView(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.SetItemImage(child, self.fldridx, wx.TreeItemIcon_Normal)
         self.SetItemImage(child, self.fldropenidx, wx.TreeItemIcon_Expanded)
         self.ExpandAll()
-
-

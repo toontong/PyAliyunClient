@@ -31,9 +31,20 @@ class GUIEventHandler(object):
 
     # 以下为界面事件
     def on_init_gui(self, host, access_id, access_key):
-        print host, access_id, access_key
         self.aliyun.set_key(host, access_id, access_key)
         self.aliyun.get_service(self.gui.set_service)
+
+    def create_bucket(self, bucket, is_private):
+        "acl: public-read-write，public-read ，private"
+        self.aliyun.create_bucket(
+            lambda ret: self.aliyun.get_service(self.gui.set_service),
+            bucket,
+            'private' if is_private else 'public-read')
+
+    def delete_bucket(self, bucket):
+        self.aliyun.delete_bucket(
+            lambda ret: self.aliyun.get_service(self.gui.set_service),
+            bucket)
 
     def on_bucket_selected(self, event):
         """选 择左侧bucket事件"""
@@ -47,12 +58,20 @@ class GUIEventHandler(object):
 
     def on_object_activated(self, event):
         """双击文件/文件夹事件"""
+        # path is utf8
         path = self.gui.get_list_obj_txt(event.m_itemIndex)
         if path == '..':
             self.current_path = self.prev_path
             self.prev_path = os.path.basename(self.current_path)
         elif not path.endswith(r'/'):
             logging.info("Click type was file [%s]" % path)
+            # save_file is unicode
+            save_file = self.gui.show_save_dialog(os.path.basename(path))
+            if save_file:
+                self.aliyun.get_object_to_file(lambda e:e,
+                                         self.current_bucket,
+                                         path,
+                                         save_file)
             return
         else:
             self.prev_path = self.current_path

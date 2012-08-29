@@ -8,6 +8,7 @@ import wx
 from listview import FileList
 from treeview import TreeView
 from key_entry_dialog import KeyEntryDialog
+from new_bucket_dialog import NewBucketEntryDialog
 
 CURRENT_PATH = os.path.dirname(__file__)
 APP_NAME = u'ALIYUN.COM OSS GUI Sync Client Tool'
@@ -17,12 +18,13 @@ if DEBUG:
     logging.info = logging.warning
 
 class MainDialog(wx.Frame):
-    MID_SETTING = wx.NewId()
-    MID_SYNC_UP = wx.NewId()
-    MID_SYNC_DOWN = wx.NewId()
-    MID_VIEW_MGR = wx.NewId()
-    MID_VIEW_BROWSE = wx.NewId()
-    MID_VIEW_SYNC = wx.NewId()
+    ID_SETTING = wx.NewId()
+    ID_SYNC_UP = wx.NewId()
+    ID_SYNC_DOWN = wx.NewId()
+    ID_VIEW_MGR = wx.NewId()
+    ID_VIEW_BROWSE = wx.NewId()
+    ID_VIEW_SYNC = wx.NewId()
+    ID_NEW_BUCKET = wx.NewId()
 
     def __init__(self, event_handler) :
         super(MainDialog, self).__init__(parent = None,
@@ -41,9 +43,9 @@ class MainDialog(wx.Frame):
         menuBar = wx.MenuBar()
 
         menu1 = wx.Menu()
-        menu1.Append(self.MID_SETTING, u"设置a&ccess_key", u"Setting the access_id and secret_access_key")
-        menu1.Append(self.MID_SYNC_UP, u"上行同步(&U)", u"Sync the file to OSS.")
-        menu1.Append(self.MID_SYNC_DOWN, u"下行同步(&D)", u"Sync the file to local folder.")
+        menu1.Append(self.ID_SETTING, u"设置a&ccess_key", u"Setting the access_id and secret_access_key")
+        menu1.Append(self.ID_SYNC_UP, u"上行同步(&U)", u"Sync the file to OSS.")
+        menu1.Append(self.ID_SYNC_DOWN, u"下行同步(&D)", u"Sync the file to local folder.")
         menu1.Append(wx.ID_ABOUT, u"打开同步目录(&P)", u"Open the sync folder on Explorer")
         menu1.AppendSeparator()
         menu1.Append(wx.ID_ABOUT, u"&About", u"About the Application")
@@ -51,9 +53,9 @@ class MainDialog(wx.Frame):
         menuBar.Append(menu1, u"操作(&O)")
 
         menu2 = wx.Menu()
-        menu2.Append(self.MID_VIEW_SYNC, u'同步(&T)', u'同步OSS文件到指定的文件夹', wx.ITEM_RADIO)
-        menu2.Append(self.MID_VIEW_MGR, u'管理(&M)', u'对OSS文件进行管理', wx.ITEM_RADIO)
-        menu2.Append(self.MID_VIEW_BROWSE, u'浏览(&L)', u'浏览文件', wx.ITEM_RADIO)
+        menu2.Append(self.ID_VIEW_SYNC, u'同步(&T)', u'同步OSS文件到指定的文件夹', wx.ITEM_RADIO)
+        menu2.Append(self.ID_VIEW_MGR, u'管理(&M)', u'对OSS文件进行管理', wx.ITEM_RADIO)
+        menu2.Append(self.ID_VIEW_BROWSE, u'浏览(&L)', u'浏览文件', wx.ITEM_RADIO)
         menuBar.Append(menu2, u"视图(&V)")
 
         self.SetMenuBar(menuBar)
@@ -69,7 +71,7 @@ class MainDialog(wx.Frame):
 
         # 左边bucket列表
         left = wx.Panel(self._splitter, -1 , style = wx.TAB_TRAVERSAL)
-        tbNewBucket = wx.Button(left, -1, u"新建 bucket", (10, 10), (100, 24))
+        tbNewBucket = wx.Button(left, self.ID_NEW_BUCKET, u"创建存储空间", (10, 10), (100, 24))
         self._tree = TreeView(left, (0, 40))
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(tbNewBucket, 0, wx.EXPAND | wx.ALL, 5)
@@ -98,17 +100,19 @@ class MainDialog(wx.Frame):
 
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.event_handler.on_bucket_selected, self._tree)
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.event_handler.on_object_activated, self._list)
-        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.MID_VIEW_MGR)
-        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.MID_VIEW_BROWSE)
-        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.MID_VIEW_SYNC)
-        self.Bind(wx.EVT_MENU, self.init, id = self.MID_SETTING)
+        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_MGR)
+        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_BROWSE)
+        self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_SYNC)
+        self.Bind(wx.EVT_MENU, self.init, id = self.ID_SETTING)
+        self.Bind(wx.EVT_MENU, self.on_delete_bucket, id = TreeView.ID_DELETE_BUCKET)
+        self.Bind(wx.EVT_BUTTON, self.on_create_bucket, id = self.ID_NEW_BUCKET)
 
         self.Bind(wx.EVT_BUTTON, self.event_handler.on_button_sync_down,
                   id = BucketInfoPanel.ID_SYNC_DOWN)
         self.Bind(wx.EVT_BUTTON, self.event_handler.on_button_sync_up,
                   id = BucketInfoPanel.ID_SYNC_UP)
 
-        self.set_view(self.MID_VIEW_SYNC)
+        self.set_view(self.ID_VIEW_SYNC)
 
     def init(self, evt = None):
         key_entry = KeyEntryDialog(self, -1, "Input Access key", size = (750, 400),
@@ -116,20 +120,34 @@ class MainDialog(wx.Frame):
         host, access_id, access_key = key_entry.get_Key()
         self.event_handler.on_init_gui(host, access_id, access_key)
 
+    def on_create_bucket(self, evt):
+        dlg = NewBucketEntryDialog(self,)
+        name, attr = dlg.get_Key()
+        if name:
+            self.event_handler.create_bucket(name, attr)
+        dlg.Destroy()
+
+    def on_delete_bucket(self, evt):
+        index = self._tree.GetFirstSelected()
+        if index < 0:
+            return
+        bucket_name = self.get_bucket_txt(index)
+        self.event_handler.delete_bucket(bucket_name)
+
     def on_view_clicked(self, evt):
         id = evt.GetId()
         self.set_view(id)
 
     def set_view(self, id):
-        if id == self.MID_VIEW_MGR:
+        if id == self.ID_VIEW_MGR:
             self._bucket_info.show_mgr_button(True)
             self._bucket_info.show_sync_button(False)
             self._list.set_view(True)
-        elif id == self.MID_VIEW_SYNC:
+        elif id == self.ID_VIEW_SYNC:
             self._bucket_info.show_sync_button(True)
             self._bucket_info.show_mgr_button(False)
             self._list.set_view(False)
-        elif id == self.MID_VIEW_BROWSE:
+        elif id == self.ID_VIEW_BROWSE:
             self._bucket_info.show_mgr_button(False)
             self._bucket_info.show_sync_button(False)
             self._list.set_view(False)
@@ -147,6 +165,7 @@ class MainDialog(wx.Frame):
         return self._list.GetItemText(index).encode('utf8')
 
     def set_service(self, service):
+        self._tree.DeleteAllItems()
         for bucket in service.get_buckets():
             self._tree.add_bucket(bucket)
 
@@ -169,6 +188,19 @@ class MainDialog(wx.Frame):
         #　TODO：非main线程，xp下会崩溃
         return wx.MessageDialog(self, msg.decode('utf8'),
             self.GetTitle(), wx.OK | wx.ICON_INFORMATION).ShowModal()
+
+    def show_save_dialog(self, filename):
+        '''return abs unicode path'''
+        dlg = wx.FileDialog(
+            self, message = "Save file as ...", defaultDir = os.getcwd(),
+            defaultFile = filename, style = wx.SAVE
+            )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            if os.path.exists(path) and self.ask_continue("文件已存在，将覆盖已有文件，是否断续？"):
+                return path
+        return None
 
 class BucketInfoPanel(wx.Panel):
     ID_DELETE = wx.NewId()
@@ -246,7 +278,8 @@ class BucketInfoPanel(wx.Panel):
         self.bucket_name.SetLabelText(name.decode('utf8'))
 
     def set_grant(self, grant):
-        self.bucket_atrr.SetLabelText(u"读写权限：%s" % grant.decode('utf8'))
+        grant = {'public-read':u'公共读权限', 'private': u'私有权限'}.get(grant, u'私有权限')
+        self.bucket_atrr.SetLabelText(u"读写权限：%s" % grant)
         self.Layout()
         self.Refresh()
 
@@ -281,9 +314,7 @@ def main(event_handler):
             win.Show()
             return True
 
-
     Application().MainLoop()
 
 if __name__ == '__main__':
     main(None)
-
