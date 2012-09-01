@@ -95,21 +95,21 @@ class KeyEntryDialog(wx.Dialog):
         sizer.Fit(self)
         self.Center()
 
-    def get_Key(self):
-        if os.path.exists(self._FILE):
+    def get_Key(self, is_check_file):
+        if not is_check_file and os.path.exists(self._FILE):
             fp = open(self._FILE, 'rb')
             data = fp.read()
             dl = data.split('#')
             if len(dl) == 3 and dl[0] and dl[1] and dl[2]:
                 return dl
 
-        self.ShowModal()
+        hr = self.ShowModal()
 
         host = self.host.GetValue().encode('utf8')
         access_id = self.access_id.GetValue().encode('utf8')
         access_key = self.access_key.GetValue().encode('utf8')
 
-        if self.chk_save.IsChecked():
+        if hr == wx.ID_OK and self.chk_save.IsChecked():
             fp = open(self._FILE, 'wb+')
             fp.write('#'.join((host, access_id, access_key)))
             fp.close()

@@ -117,8 +117,9 @@ class MainDialog(wx.Frame):
     def init(self, evt = None):
         key_entry = KeyEntryDialog(self, -1, "Input Access key", size = (750, 400),
                          style = wx.DEFAULT_DIALOG_STYLE)
-        host, access_id, access_key = key_entry.get_Key()
-        self.event_handler.on_init_gui(host, access_id, access_key)
+        host, access_id, access_key = key_entry.get_Key(evt)
+        if host and access_id and access_key:
+            self.event_handler.on_init_gui(host, access_id, access_key)
 
     def on_create_bucket(self, evt):
         dlg = NewBucketEntryDialog(self,)
@@ -166,6 +167,7 @@ class MainDialog(wx.Frame):
 
     def set_service(self, service):
         self._tree.DeleteAllItems()
+        if service is None:return
         for bucket in service.get_buckets():
             self._tree.add_bucket(bucket)
 
