@@ -38,7 +38,7 @@ class AliyunOSS():
         '''
 
         self.set_key(host, access_id, secret_access_key)
-        self._async = AsyncCall(logging, threads = 4)
+        self._async = AsyncCall(logging, threads = 1)
 
     def set_key(self, host, access_id, secret_access_key):
         self.is_init_key = access_id and secret_access_key
@@ -70,6 +70,17 @@ class AliyunOSS():
         logging.info('Calling DeleteBucket')
         self._async.add(callable)
 
+    def delete_object(self, callback, bucket, object, headers = {}):
+        adapter = _ResultAdapter("DeleteObject",
+                                 self._api.delete_object,
+                                 GetObject)
+        callable = Callable(adapter,
+                            (bucket, object, headers),
+                            resultHandler = callback,
+                            exceptHandler = self._exceptHandler)
+        logging.info('Calling DeleteObject [%s]' % object)
+        self._async.add(callable)
+
     def get_service(self, callback):
         adapter = _ResultAdapter("GetService",
                                  self._api.get_service,
@@ -82,7 +93,7 @@ class AliyunOSS():
 
     def get_bucket(self, callback, bucket,
                    prefix = '', marker = '',
-                   delimiter = '', max_key = '',
+                   delimiter = '/', max_key = '',
                    headers = {}):
         '''
         prefix  限定返回的object key必须以prefix作为前缀。
@@ -149,3 +160,18 @@ class AliyunOSS():
                             exceptHandler = self._exceptHandler)
         logging.info('Calling PutObject [%s\%s]' % (bucket, object))
         self._async.add(callable)
+
+    def head_object(self, bucket, object, headers = {}):
+        try:
+            res = self._api.head_object(bucket, object, headers)
+        except :
+            import traceback
+            logging.error(traceback.format_exc())
+            return {}
+
+        if res.status / 100 == 2:
+            return res.getheaders()
+        else:
+            logging.error('HeadObject - %s - %s' % (res.status, res.read()))
+            return {}
+

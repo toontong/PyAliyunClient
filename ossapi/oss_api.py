@@ -522,6 +522,9 @@ class OssAPI:
 
         return self.object_operation("DELETE", bucket, object, headers)
 
+    def delete_multiple_object(self, bucket, object_list, headrs = {}):
+        raise NotImplemented()
+
     def head_object(self, bucket, object, headers = {}):
         '''
         Head object, to get the meta message of object without the content

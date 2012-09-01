@@ -16,13 +16,12 @@ class DirectoryInfo(SafeSerialize, dict):
     value为 FileInfo or PathInfo
     '''
 
-
 class FileInfo(object):
     def __init__(self, fname, md5 = ''):
         assert isinstance(fname, unicode)
         '''fname : 文件绝对路径, unicode'''
         self.fname = fname
-        self.md5 = md5
+        self.md5 = md5.lower()
         self.mtime = fileutils.mtime(fname)
         self.size = fileutils.size(fname)
         self.isFile = True

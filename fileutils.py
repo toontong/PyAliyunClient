@@ -25,7 +25,7 @@ def md5(fname):
         while d:
             m.update(d)
             d = fp.read(s)
-        return m.hexdigest()
+        return m.hexdigest().lower()
     except:
         traceback.print_exc()
         return ''
