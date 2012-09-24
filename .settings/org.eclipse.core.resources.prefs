@@ -1,0 +1,24 @@
+#Wed Aug 29 17:31:32 GMT+08:00 2012
+eclipse.preferences.version=1
+encoding//ossapi/oss_api.py=utf8
+encoding//ossapi/oss_cmd.py=utf8
+encoding//ossapi/oss_fs.py=utf8
+encoding//ossapi/oss_sample.py=utf8
+encoding//ossapi/oss_util.py=utf8
+encoding//ossapi/oss_xml_handler.py=utf8
+encoding//tkui/main_dialog.py=utf8
+encoding//wxui/key_entry_dialog.py=utf8
+encoding//wxui/listbase.py=utf8
+encoding//wxui/listview.py=utf8
+encoding//wxui/main_dialog.py=utf8
+encoding//wxui/new_bucket_dialog.py=utf8
+encoding//wxui/treeview.py=utf8
+encoding/<project>=UTF-8
+encoding/aliyunoss.py=utf8
+encoding/asynccall.py=utf8
+encoding/database.py=utf-8
+encoding/dir_info.py=utf8
+encoding/fileutils.py=utf8
+encoding/gui_event_handler.py=utf8
+encoding/main.py=utf8
+encoding/sync.py=utf8

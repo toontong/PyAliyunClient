@@ -231,7 +231,7 @@ class BucketInfoPanel(wx.Panel):
         self.sync_box.Add(bt_sync_up, 0, wx.EXPAND, 0)
         self.sync_box.Add(bt_sync_down, 0, wx.EXPAND, 0)
 
-        if DEBUG:edit_path.SetLabelText(u"F:\\新建文件夹")
+        #if DEBUG:edit_path.SetLabelText(u"F:\\新建文件夹")
 
         line = wx.StaticLine(self, style = wx.LI_VERTICAL)
 

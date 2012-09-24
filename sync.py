@@ -91,7 +91,7 @@ class DownBucketWorker(BucketWorker):
         return self.__download(unicode_key_name, etag, savename, dirinfo)
 
     def __download(self, unicode_key_name, etag, savename, dirinfo):
-        tmpfile = unicode_key_name + u'.tmp'
+        tmpfile = savename + u'.tmp'
 
         def callback(file_object):
             if not os.path.exists(tmpfile):

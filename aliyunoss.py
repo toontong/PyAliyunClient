@@ -38,7 +38,8 @@ class AliyunOSS():
         '''
 
         self.set_key(host, access_id, secret_access_key)
-        self._async = AsyncCall(logging, threads = 1)
+        self._async = AsyncCall(logging, threads = 2)
+        self._acl_buff = {}
 
     def set_key(self, host, access_id, secret_access_key):
         self.is_init_key = access_id and secret_access_key
@@ -116,15 +117,21 @@ class AliyunOSS():
         self._async.add(callable)
 
     def get_bucket_acl(self, callback, bucket):
+        buf = self._acl_buff.get(bucket)
+        if buf:
+            return callback(buf)
         adapter = _ResultAdapter("GetBucketAcl",
                                  self._api.get_bucket_acl,
                                  GetBucketAclXml)
-        callable = Callable(adapter,
+        def _callable(res):
+            self._acl_buff[bucket] = res
+            callable(res)
+        adapter_callable = Callable(adapter,
                             (bucket,),
-                            resultHandler = callback,
+                            resultHandler = _callable,
                             exceptHandler = self._exceptHandler)
         logging.info('Calling GetBucketAcl [%s]' % bucket)
-        self._async.add(callable)
+        self._async.add(adapter_callable)
 
     def get_object_to_file(self, callback, bucket, object, filename, headers = {}):
         adapter = _ResultAdapter("GetObject",
