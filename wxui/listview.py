@@ -58,13 +58,17 @@ class FileList(wx.ListCtrl, listmix.CheckListCtrlMixin):
 
     def set_bucket(self, bucket, prefix):
         ls = []
+        has_parent = False
         #"Prefix list: (folder)"
-        for p in bucket.prefix_list:
-            ls.append(self._folder(p, prefix))
-
+        if bucket.prefix_list:
+            for p in bucket.prefix_list:
+                ls.append(self._folder(p, prefix))
+        else:
+            has_parent = True
+            ls.append(self._folder('..', '..'))
         #"Content list:(file)"
         for c in bucket.content_list:
-            if prefix and c.key == prefix:
+            if prefix and c.key == prefix and not has_parent:
                 ls.insert(0, self._folder(c.key, prefix))
             else:
                 ls.append(self._file(c, prefix))

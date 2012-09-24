@@ -6,6 +6,7 @@ PyAliyunClient
 * request wxPython2.9 for GUI
 * test on windows7, win7下UI效果比较好，对xp支持不友好 
 
+
 已调用API：
 -------
     手动同步
@@ -29,4 +30,5 @@ TODO：
 -------
     下行同步删除
     对绑定目录的自动同步
+    使用pyinstaller打包成exe文件
 
