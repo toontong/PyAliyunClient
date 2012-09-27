@@ -46,9 +46,9 @@ class GUIEventHandler(object):
             lambda ret: self.aliyun.get_service(self.gui.set_service),
             bucket)
 
-    def on_bucket_selected(self, event):
+    def select_bucket(self, bucket):
         """选 择左侧bucket事件"""
-        self.current_bucket = self.gui.get_bucket_txt(event.m_itemIndex)
+        self.current_bucket = bucket
         self.current_prefix = ''
         self.prev_path = ''
         self.current_path = ''
@@ -56,15 +56,14 @@ class GUIEventHandler(object):
         self._call_get_bucket()
         self.aliyun.get_bucket_acl(self.gui.set_bucket_acl, self.current_bucket)
 
-    def on_object_activated(self, event):
+    def select_object(self, path):
         """双击文件/文件夹事件"""
         # path is utf8
-        path = self.gui.get_list_obj_txt(event.m_itemIndex)
         if path == '..':
             self.current_path = self.prev_path
             self.prev_path = os.path.basename(self.current_path)
         elif not path.endswith(r'/'):
-            logging.info("Click type was file [%s]" % path)
+            logging.info("Saving file [%s]" % path)
             # save_file is unicode
             save_file = self.gui.show_save_dialog(os.path.basename(path))
             if save_file:
@@ -79,6 +78,13 @@ class GUIEventHandler(object):
 
         self.current_prefix = self.current_path
         self._call_get_bucket()
+
+    def head_object(self, path):
+        key = self.current_prefix + path
+        def callback(object_head):
+            if object_head:
+                self.gui.head_object(key, object_head)
+        self.aliyun.head_object(callback, self.current_bucket, key)
 
     def on_button_sync_up(self, event):
         '''上行同步按钮'''

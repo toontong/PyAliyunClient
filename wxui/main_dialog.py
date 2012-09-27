@@ -8,6 +8,7 @@ import wx
 from listview import FileList
 from treeview import TreeView
 from key_entry_dialog import KeyEntryDialog
+from head_dialog import HeadDialog
 from new_bucket_dialog import NewBucketEntryDialog
 
 CURRENT_PATH = os.path.dirname(__file__)
@@ -38,7 +39,8 @@ class MainDialog(wx.Frame):
         self.SetSize((840, 570))
         self.Centre()
 
-        self.CreateStatusBar()
+        self._statusbar = self.CreateStatusBar(3)
+        self._statusbar.SetStatusWidths([200, 500, 100])
 
         menuBar = wx.MenuBar()
 
@@ -54,7 +56,7 @@ class MainDialog(wx.Frame):
 
         menu2 = wx.Menu()
         menu2.Append(self.ID_VIEW_SYNC, u'同步(&T)', u'同步OSS文件到指定的文件夹', wx.ITEM_RADIO)
-        menu2.Append(self.ID_VIEW_MGR, u'管理(&M)', u'对OSS文件进行管理', wx.ITEM_RADIO)
+        #menu2.Append(self.ID_VIEW_MGR, u'管理(&M)', u'对OSS文件进行管理', wx.ITEM_RADIO)
         menu2.Append(self.ID_VIEW_BROWSE, u'浏览(&L)', u'浏览文件', wx.ITEM_RADIO)
         menuBar.Append(menu2, u"视图(&V)")
 
@@ -67,7 +69,7 @@ class MainDialog(wx.Frame):
 
         self._splitter = wx.SplitterWindow(self,
             style = wx.SP_3D | wx.SP_BORDER | wx.SP_LIVE_UPDATE | wx.SP_3DSASH | wx.TAB_TRAVERSAL)
-        self._splitter.SetMinimumPaneSize(240)
+        self._splitter.SetMinimumPaneSize(210)
 
         # 左边bucket列表
         left = wx.Panel(self._splitter, -1 , style = wx.TAB_TRAVERSAL)
@@ -87,7 +89,7 @@ class MainDialog(wx.Frame):
         vbox.Add(self._list, 1, wx.EXPAND | wx.ALL, 0)
         right.SetSizer(vbox)
 
-        self._splitter.SplitVertically(left, right, 240)
+        self._splitter.SplitVertically(left, right, 210)
 
         self.SetBackgroundColour('#FFFFFF')
 
@@ -98,14 +100,17 @@ class MainDialog(wx.Frame):
         self.SetAutoLayout(True)
         self.Fit()
 
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.event_handler.on_bucket_selected, self._tree)
-        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.event_handler.on_object_activated, self._list)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.on_bucket_selected, self._tree)
+        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.on_object_activated, self._list)
+
+
         self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_MGR)
         self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_BROWSE)
         self.Bind(wx.EVT_MENU, self.on_view_clicked, id = self.ID_VIEW_SYNC)
         self.Bind(wx.EVT_MENU, self.init, id = self.ID_SETTING)
         self.Bind(wx.EVT_MENU, self.on_delete_bucket, id = TreeView.ID_DELETE_BUCKET)
         self.Bind(wx.EVT_BUTTON, self.on_create_bucket, id = self.ID_NEW_BUCKET)
+        self.Bind(wx.EVT_MENU, self.on_head_object, id = FileList.ID_HEAD_OBJECT)
 
         self.Bind(wx.EVT_BUTTON, self.event_handler.on_button_sync_down,
                   id = BucketInfoPanel.ID_SYNC_DOWN)
@@ -114,12 +119,44 @@ class MainDialog(wx.Frame):
 
         self.set_view(self.ID_VIEW_SYNC)
 
+    def on_bucket_selected(self, event):
+        current_bucket = self.get_bucket_txt(event.m_itemIndex)
+        self.event_handler.select_bucket(current_bucket)
+
+    def on_object_activated(self, event):
+        path = self.get_list_obj_txt(event.m_itemIndex)
+        self.event_handler.select_object(path)
+
+    def on_head_object(self, event):
+        path = self.get_list_obj_txt(self._list.GetFirstSelected())
+        if '..' == path:
+            logging.warning(".. object no head")
+            return
+        self.event_handler.head_object(path)
+
     def init(self, evt = None):
-        key_entry = KeyEntryDialog(self, -1, "Input Access key", size = (750, 400),
-                         style = wx.DEFAULT_DIALOG_STYLE)
-        host, access_id, access_key = key_entry.get_Key(evt)
-        if host and access_id and access_key:
-            self.event_handler.on_init_gui(host, access_id, access_key)
+        self._statusbar.SetStatusText('右键可delete Bucket,head object', 0)
+        class Obj(object):pass
+        writer = Obj()
+
+        writer.write = self.log_handler
+        stream_handler = logging.StreamHandler(writer)
+        #formatter = logging.Formatter("%(levelname)s - %(levelno)s - %(threadName)s - %(message)s")
+        #stream_handler.setFormatter(formatter)
+        logging.getLogger().addHandler(stream_handler)
+
+        def call():
+            key_entry = KeyEntryDialog(self, -1, "Input Access key", size = (750, 400),
+                             style = wx.DEFAULT_DIALOG_STYLE)
+            host, access_id, access_key = key_entry.get_Key(evt)
+            if host and access_id and access_key:
+                self.event_handler.on_init_gui(host, access_id, access_key)
+        wx.CallAfter(call)
+
+    def log_handler(self, msg):
+        if not isinstance(msg, unicode):
+            msg = msg.decode('utf8')
+        self._statusbar.SetStatusText(msg, 1)
 
     def on_create_bucket(self, evt):
         dlg = NewBucketEntryDialog(self,)
@@ -203,6 +240,12 @@ class MainDialog(wx.Frame):
             if os.path.exists(path) and self.ask_continue("文件已存在，将覆盖已有文件，是否断续？"):
                 return path
         return None
+
+    def head_object(self, key, object_head):
+        cl = lambda : HeadDialog(self, -1, key.decode('utf8'), object_head.headers).ShowModal()
+        wx.CallAfter(cl)
+
+
 
 class BucketInfoPanel(wx.Panel):
     ID_DELETE = wx.NewId()
@@ -310,7 +353,10 @@ class BucketInfoPanel(wx.Panel):
 def main(event_handler):
     class Application(wx.App):
         def OnInit(self):
-            locale.setlocale(locale.LC_ALL, 'english')
+            try:
+                locale.setlocale(locale.LC_ALL, 'english')
+            except:
+                pass
             win = MainDialog(event_handler)
             win.init()
             win.Show()

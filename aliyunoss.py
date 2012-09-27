@@ -7,7 +7,7 @@ from ossapi.oss_xml_handler import (
     GetServiceXml,
     GetBucketXml,
     GetBucketAclXml,
-    GetObject
+    ObjectHeader as GetObject
     )
 from ossapi.oss_api import OssAPI
 from asynccall import AsyncCall, Callable
@@ -26,7 +26,9 @@ class _ResultAdapter(object):
             logging.error('%s - %s - %s' % (self.name, res.status, e.msg))
             return
 
-        return self.result(res.read())
+        res_obj = self.result(res.read())
+        res_obj.headers(res.msg.dict)
+        return res_obj
 
 class AliyunOSS():
     def __init__(self, host = None, access_id = None, secret_access_key = None):
@@ -168,17 +170,15 @@ class AliyunOSS():
         logging.info('Calling PutObject [%s\%s]' % (bucket, object))
         self._async.add(callable)
 
-    def head_object(self, bucket, object, headers = {}):
-        try:
-            res = self._api.head_object(bucket, object, headers)
-        except :
-            import traceback
-            logging.error(traceback.format_exc())
-            return {}
+    def head_object(self, callback, bucket, object, headers = {}):
+        adapter = _ResultAdapter("HeadObject",
+                         self._api.head_object,
+                         GetObject)
 
-        if res.status / 100 == 2:
-            return res.getheaders()
-        else:
-            logging.error('HeadObject - %s - %s' % (res.status, res.read()))
-            return {}
+        callable = Callable(adapter,
+                            (bucket, object,),
+                            resultHandler = callback,
+                            exceptHandler = self._exceptHandler)
+        logging.info('Calling HeadObject [%s\%s]' % (bucket, object))
+        self._async.add(callable)
 

@@ -26,7 +26,7 @@ class Callable():
                 if self._exceptHandler:
                     self._exceptHandler(e)
             except Exception, err:
-                logging.error('on async call error handler raise [%s]' % err.__str__())
+                logging.error('on async raise [%s]' % err.__str__())
 
 class AsyncCall(object):
     def __init__(self, logger, threads = 2):

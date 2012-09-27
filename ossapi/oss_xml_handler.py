@@ -15,6 +15,9 @@ def get_tag_text(element, tag):
 
 class ErrorXml(Exception):
     def __init__(self, xml_string):
+        if not xml_string:
+            self.msg = ''
+            return
         self.xml = minidom.parseString(xml_string)
         self.code = get_tag_text(self.xml, 'Code')
         self.msg = get_tag_text(self.xml, 'Message')
@@ -49,7 +52,14 @@ class Bucket:
     def __repr__(self):
         return "Name: %s\nCreationDate: %s" % (self.name, self.creation_date)
 
-class GetServiceXml:
+class ObjectHeader(object):
+    def __init__(self, xml_string):
+        pass
+
+    def headers(self, headers):
+        self.headers = headers
+
+class GetServiceXml(ObjectHeader):
     def __init__(self, xml_string):
         self.xml = minidom.parseString(xml_string)
         self.owner = Owner(self.xml.getElementsByTagName('Owner')[0])
@@ -100,13 +110,6 @@ class Part:
     def show(self):
         print "PartNumber: %s\nPartName: %s\nPartSize: %s\nETag: %s\n" % (self.part_num, self.object_name, self.object_size, self.etag)
 
-class GetObject():
-    def __init__(self, headers):
-        print headers
-        self.etag = ''
-        self.size = ''
-        self.date = ''
-
 class PostObjectGroupXml:
     def __init__(self, xml_string):
         self.xml = minidom.parseString(xml_string)
@@ -142,7 +145,7 @@ class GetObjectGroupIndexXml:
         for p in self.index_list:
             p.show()
 
-class GetBucketXml:
+class GetBucketXml(ObjectHeader):
     def __init__(self, xml_string):
         self.xml = minidom.parseString(xml_string)
         self.name = get_tag_text(self.xml, 'Name')
@@ -185,7 +188,7 @@ class GetBucketXml:
 
         return (cl, pl)
 
-class GetBucketAclXml:
+class GetBucketAclXml(ObjectHeader):
     def __init__(self, xml_string):
         self.xml = minidom.parseString(xml_string)
         if len(self.xml.getElementsByTagName('Owner')) != 0:

@@ -8,9 +8,7 @@ class TreeView(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     ID_DELETE_BUCKET = wx.NewId()
     def __init__(self, parent, pos = wx.DefaultPosition,
                  size = wx.DefaultSize, style = wx.LC_REPORT
-                                 #| wx.BORDER_SUNKEN
                                  | wx.BORDER_NONE
-                                 | wx.LC_EDIT_LABELS
                                  | wx.LC_SORT_ASCENDING):
         wx.ListCtrl.__init__(self, parent, -1, pos, size, style)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
@@ -43,8 +41,3 @@ class TreeView(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         # TODO: 非主线程更新UI，在xp下程序会崩溃
         self.InsertImageStringItem(sys.maxint, bucket.name, self.fldridx)
         return
-        child = self.AppendItem(self.root, bucket.name)
-        self.SetPyData(child, bucket)
-        self.SetItemImage(child, self.fldridx, wx.TreeItemIcon_Normal)
-        self.SetItemImage(child, self.fldropenidx, wx.TreeItemIcon_Expanded)
-        self.ExpandAll()

@@ -14,6 +14,8 @@ class FileList(wx.ListCtrl, listmix.CheckListCtrlMixin):
     idx_key = 5
     idx_pyobj = 100 + 1
 
+    ID_HEAD_OBJECT = wx.NewId()
+
     def __init__(self, parent, pos, size):
         wx.ListCtrl.__init__(
             self, parent, -1, pos,
@@ -47,6 +49,13 @@ class FileList(wx.ListCtrl, listmix.CheckListCtrlMixin):
         #self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnItemActivated)
         #self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnItemDeselected)
+        self.Bind(wx.EVT_COMMAND_RIGHT_CLICK, self.on_right_clicked)
+
+    def on_right_clicked(self, evt):
+        menu = wx.Menu()
+        menu.Append(self.ID_HEAD_OBJECT, u'Head Object')
+        self.PopupMenu(menu)
+        menu.Destroy()
 
     def set_view(self, isMgrView):
         self.is_checked_model = isMgrView
